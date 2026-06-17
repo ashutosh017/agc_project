@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { MessageCircle } from "lucide-react";
-import { getBrandDetails } from "@/lib/data";
+import { getBrandDetails } from "@/lib/brand";
 import { generateWhatsAppLink } from "@/lib/utils";
 
 export default function WhatsAppFloatingButton() {

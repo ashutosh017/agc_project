@@ -3,15 +3,18 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Search, SlidersHorizontal, RotateCcw, AlertTriangle } from "lucide-react";
-import { getProducts } from "@/lib/data";
 import { Product } from "@/types";
 import ProductCard from "@/components/ProductCard";
 import Breadcrumbs from "@/components/Breadcrumbs";
 
-function StoreContent() {
+interface StoreClientProps {
+  products: Product[];
+}
+
+function StoreContent({ products }: StoreClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const allProducts = getProducts();
+  const allProducts = products;
 
   // Get initial states from URL query params
   const categoryParam = searchParams.get("category") || "All";
@@ -195,7 +198,7 @@ function StoreContent() {
   );
 }
 
-export default function StoreClient() {
+export default function StoreClient({ products }: StoreClientProps) {
   return (
     <Suspense
       fallback={
@@ -207,7 +210,7 @@ export default function StoreClient() {
         </div>
       }
     >
-      <StoreContent />
+      <StoreContent products={products} />
     </Suspense>
   );
 }

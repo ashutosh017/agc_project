@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import ContactClient from "@/components/ContactClient";
-import { getBrandDetails } from "@/lib/data";
+import { getBrandDetails } from "@/lib/brand";
 
 export function generateMetadata(): Metadata {
   const brand = getBrandDetails();

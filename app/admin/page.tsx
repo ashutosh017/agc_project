@@ -21,27 +21,44 @@ import {
   Bike,
   Eye,
   EyeOff,
-  GripVertical
+  GripVertical,
+  Upload
 } from "lucide-react";
-import { getProducts, getBrandDetails } from "@/lib/data";
+import { getBrandDetails } from "@/lib/brand";
 import { Product } from "@/types";
 import { formatPrice } from "@/lib/utils";
 
 export default function AdminPage() {
   const router = useRouter();
   const brand = getBrandDetails();
-  const initialProducts = getProducts();
 
   // Authentication state
   const [passcode, setPasscode] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [authError, setAuthError] = useState("");
   const [showPasscode, setShowPasscode] = useState(false);
+
+  // Check auth session on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedAuth = localStorage.getItem("admin_authenticated");
+      if (storedAuth === "true") {
+        setIsAuthenticated(true);
+      }
+      setIsAuthChecking(false);
+    }
+  }, []);
 
   // Catalog State
   const [products, setProducts] = useState<Product[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [deletingProductInfo, setDeletingProductInfo] = useState<{ id: string; name: string } | null>(null);
+  const [sizesText, setSizesText] = useState("");
+  const [colorsText, setColorsText] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadIndex, setUploadIndex] = useState<number | null>(null);
   
   // Toast notifications
   const [toastMessage, setToastMessage] = useState("");
@@ -68,10 +85,19 @@ export default function AdminPage() {
   const [formSpecs, setFormSpecs] = useState<{ key: string; value: string }[]>([]);
   const [formFeatures, setFormFeatures] = useState<string[]>([]);
 
-  // Load products in client on auth
+  // Load products in client on auth from database API
   useEffect(() => {
     if (isAuthenticated) {
-      setProducts(initialProducts);
+      fetch("/api/products")
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data)) {
+            setProducts(data);
+          }
+        })
+        .catch(() => {
+          showToast("Failed to load products from database.", "error");
+        });
     }
   }, [isAuthenticated]);
 
@@ -109,14 +135,16 @@ export default function AdminPage() {
     if (passcode === "admin123") {
       setIsAuthenticated(true);
       setAuthError("");
+      localStorage.setItem("admin_authenticated", "true");
     } else {
-      setAuthError("Invalid passcode. Hint: admin123");
+      setAuthError("Invalid passcode. Hint: check developer notes");
     }
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
     setPasscode("");
+    localStorage.removeItem("admin_authenticated");
   };
 
   // Toast helper
@@ -135,6 +163,8 @@ export default function AdminPage() {
       Object.entries(product.specs).map(([key, value]) => ({ key, value }))
     );
     setFormFeatures([...product.features]);
+    setSizesText(product.variants?.Sizes?.join(", ") || "");
+    setColorsText(product.variants?.Colors?.join(", ") || "");
     setIsEditing(true);
   };
 
@@ -171,6 +201,8 @@ export default function AdminPage() {
     setEditingProduct(newProduct);
     setFormSpecs(Object.entries(newProduct.specs).map(([key, value]) => ({ key, value })));
     setFormFeatures([...newProduct.features]);
+    setSizesText(newProduct.variants?.Sizes?.join(", ") || "");
+    setColorsText(newProduct.variants?.Colors?.join(", ") || "");
     setIsEditing(true);
   };
 
@@ -230,7 +262,11 @@ export default function AdminPage() {
       ...editingProduct,
       slug: finalSlug,
       specs: specRecord,
-      features: cleanedFeatures
+      features: cleanedFeatures,
+      variants: {
+        Sizes: sizesText.split(",").map((s) => s.trim()).filter((s) => s !== ""),
+        Colors: colorsText.split(",").map((c) => c.trim()).filter((c) => c !== "")
+      }
     };
 
     // Check slug uniqueness
@@ -254,11 +290,88 @@ export default function AdminPage() {
     await persistCatalog(updatedList, "Product listing saved successfully.");
   };
 
-  // Delete product listing
-  const deleteProduct = async (id: string, name: string) => {
-    if (confirm(`Are you sure you want to delete "${name}" listing?`)) {
-      const updatedList = products.filter((p) => p.id !== id);
-      await persistCatalog(updatedList, "Product listing deleted successfully.");
+  // Confirm and execute delete listing
+  const confirmDeleteProduct = async () => {
+    if (!deletingProductInfo) return;
+    const { id } = deletingProductInfo;
+    const updatedList = products.filter((p) => p.id !== id);
+    await persistCatalog(updatedList, "Product listing deleted successfully.");
+    setDeletingProductInfo(null);
+  };
+
+  // Upload file to ImageKit
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, replaceIndex: number | null = null) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingProduct) return;
+
+    try {
+      setIsUploading(true);
+      if (replaceIndex !== null) {
+        setUploadIndex(replaceIndex);
+      } else {
+        setUploadIndex(-1); // using -1 for main append loader
+      }
+
+      // 1. Fetch secure signature parameters from our server
+      const authRes = await fetch("/api/imagekit-auth");
+      if (!authRes.ok) {
+        const errorData = await authRes.json();
+        throw new Error(errorData.error || "Failed to fetch ImageKit credentials.");
+      }
+      const authData = await authRes.json();
+
+      // 2. Prepare Direct Upload Form Data
+      const publicKey = process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY;
+      if (!publicKey) {
+        throw new Error("NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY is not configured.");
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("fileName", `${editingProduct.slug || "cycle"}-${Date.now()}`);
+      formData.append("publicKey", publicKey);
+      formData.append("signature", authData.signature);
+      formData.append("token", authData.token);
+      formData.append("expire", authData.expire);
+
+      // 3. Upload to ImageKit Endpoint
+      const uploadRes = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        const uploadErr = await uploadRes.json();
+        throw new Error(uploadErr.message || "Failed to upload file to ImageKit.");
+      }
+
+      const uploadData = await uploadRes.json();
+      const uploadedUrl = uploadData.url;
+
+      // 4. Update catalog list
+      const updatedImages = [...editingProduct.images];
+      if (replaceIndex !== null) {
+        updatedImages[replaceIndex] = uploadedUrl;
+      } else {
+        if (updatedImages.length === 1 && updatedImages[0] === "") {
+          updatedImages[0] = uploadedUrl;
+        } else {
+          updatedImages.push(uploadedUrl);
+        }
+      }
+
+      setEditingProduct({
+        ...editingProduct,
+        images: updatedImages,
+      });
+
+      showToast("Image uploaded successfully!", "success");
+    } catch (err: any) {
+      showToast(err.message || "File upload failed.", "error");
+    } finally {
+      setIsUploading(false);
+      setUploadIndex(null);
+      e.target.value = "";
     }
   };
 
@@ -285,6 +398,18 @@ export default function AdminPage() {
       showToast("Connection error. Could not write to server.", "error");
     }
   };
+
+  // Session check loading screen to avoid flashes
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen bg-zinc-50 flex items-center justify-center py-12 px-6">
+        <div className="flex flex-col items-center gap-4 text-zinc-400">
+          <div className="w-8 h-8 rounded-full border-2 border-t-zinc-950 border-zinc-200 animate-spin" />
+          <span className="text-xs uppercase tracking-widest font-semibold">Verifying Session...</span>
+        </div>
+      </div>
+    );
+  }
 
   // Auth Screen
   if (!isAuthenticated) {
@@ -513,7 +638,7 @@ export default function AdminPage() {
                               <Edit className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => deleteProduct(p.id, p.name)}
+                              onClick={() => setDeletingProductInfo({ id: p.id, name: p.name })}
                               className="p-2 border border-zinc-250 rounded-lg hover:bg-red-50 hover:text-red-650 text-zinc-450 transition-colors"
                               title="Delete Listing"
                             >
@@ -682,20 +807,36 @@ export default function AdminPage() {
                       <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400">
                         Product Gallery Images
                       </label>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (editingProduct) {
-                            setEditingProduct({
-                              ...editingProduct,
-                              images: [...editingProduct.images, ""]
-                            });
-                          }
-                        }}
-                        className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-zinc-500 hover:text-zinc-950"
-                      >
-                        <Plus className="w-3.5 h-3.5" /> Add Image Field
-                      </button>
+                      <div className="flex items-center gap-4">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (editingProduct) {
+                              setEditingProduct({
+                                ...editingProduct,
+                                images: [...editingProduct.images, ""]
+                              });
+                            }
+                          }}
+                          className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-zinc-500 hover:text-zinc-950 cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" /> Add Image URL Field
+                        </button>
+
+                        <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600 hover:text-emerald-700 cursor-pointer">
+                          <Upload className="w-3.5 h-3.5" /> Upload File to ImageKit
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleFileUpload(e, null)}
+                            className="hidden"
+                            disabled={isUploading}
+                          />
+                        </label>
+                        {isUploading && uploadIndex === -1 && (
+                          <span className="text-[10px] text-emerald-600 animate-pulse font-semibold uppercase">Uploading...</span>
+                        )}
+                      </div>
                     </div>
                     
                     <div className="space-y-3">
@@ -732,6 +873,21 @@ export default function AdminPage() {
                             }}
                             className="w-full px-4 py-2 bg-white border border-zinc-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-zinc-950"
                           />
+
+                          <label className="p-2 border border-zinc-200 rounded-lg text-zinc-400 hover:text-emerald-600 hover:bg-zinc-50 shrink-0 cursor-pointer relative" title="Upload File to Replace">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              disabled={isUploading}
+                              onChange={(e) => handleFileUpload(e, index)}
+                            />
+                            {isUploading && uploadIndex === index ? (
+                              <div className="w-3.5 h-3.5 border-2 border-t-emerald-600 border-zinc-300 rounded-full animate-spin" />
+                            ) : (
+                              <Upload className="w-3.5 h-3.5" />
+                            )}
+                          </label>
                           
                           <button
                             type="button"
@@ -851,16 +1007,8 @@ export default function AdminPage() {
                       </label>
                       <input
                         type="text"
-                        value={editingProduct.variants.Sizes?.join(", ") || ""}
-                        onChange={(e) =>
-                          setEditingProduct({
-                            ...editingProduct,
-                            variants: {
-                              ...editingProduct.variants,
-                              Sizes: e.target.value.split(",").map((s) => s.trim()).filter((s) => s !== "")
-                            }
-                          })
-                        }
+                        value={sizesText}
+                        onChange={(e) => setSizesText(e.target.value)}
                         placeholder="e.g. S, M, L, XL"
                         className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-zinc-950"
                       />
@@ -872,16 +1020,8 @@ export default function AdminPage() {
                       </label>
                       <input
                         type="text"
-                        value={editingProduct.variants.Colors?.join(", ") || ""}
-                        onChange={(e) =>
-                          setEditingProduct({
-                            ...editingProduct,
-                            variants: {
-                              ...editingProduct.variants,
-                              Colors: e.target.value.split(",").map((c) => c.trim()).filter((c) => c !== "")
-                            }
-                          })
-                        }
+                        value={colorsText}
+                        onChange={(e) => setColorsText(e.target.value)}
                         placeholder="e.g. Stealth Black, Crimson Red"
                         className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-zinc-950"
                       />
@@ -916,6 +1056,45 @@ export default function AdminPage() {
         )}
 
       </div>
+
+      {/* Deletion Confirmation Modal Overlay */}
+      {deletingProductInfo && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-xs transition-opacity duration-300">
+          <div className="w-full max-w-md bg-white border border-zinc-200 rounded-3xl p-8 shadow-2xl mx-4 transform scale-100 transition-all duration-300">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-14 h-14 rounded-full bg-red-50 text-red-600 flex items-center justify-center mb-5 border border-red-100">
+                <Trash2 className="w-6 h-6 animate-pulse" />
+              </div>
+              <h3 className="text-xl font-bold uppercase tracking-tight text-zinc-950">
+                Confirm Deletion
+              </h3>
+              <p className="text-zinc-555 text-sm leading-relaxed mt-3 font-light">
+                Are you sure you want to delete <strong className="text-zinc-900 font-semibold">"{deletingProductInfo.name}"</strong>?<br />
+                This action cannot be undone and will immediately remove the listing from the catalog database.
+              </p>
+            </div>
+            
+            <div className="mt-8 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setDeletingProductInfo(null)}
+                className="flex-1 py-3.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-650 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
+              >
+                No, Keep It
+              </button>
+              
+              <button
+                type="button"
+                onClick={confirmDeleteProduct}
+                className="flex-1 py-3.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
+              >
+                <Trash2 className="w-4 h-4" />
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

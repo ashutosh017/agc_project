@@ -1,8 +1,8 @@
 import { MetadataRoute } from "next";
 import { getProducts } from "@/lib/data";
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const products = getProducts();
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const products = await getProducts();
   const baseUrl = "https://agrawalcycles.com";
 
   // Base routes

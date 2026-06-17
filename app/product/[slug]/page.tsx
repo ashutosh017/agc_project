@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getProductBySlug, getProducts, getBrandDetails } from "@/lib/data";
+import { getProductBySlug, getProducts } from "@/lib/data";
+import { getBrandDetails } from "@/lib/brand";
 import ProductDetailClient from "@/components/ProductDetailClient";
 
 interface PageProps {
@@ -11,7 +12,7 @@ interface PageProps {
  * Generate static paths for all products at build time for extreme performance
  */
 export async function generateStaticParams() {
-  const products = getProducts();
+  const products = await getProducts();
   return products.map((product) => ({
     slug: product.slug,
   }));
@@ -22,7 +23,7 @@ export async function generateStaticParams() {
  */
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlug(slug);
   
   if (!product) {
     return {
@@ -54,13 +55,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProductPage({ params }: PageProps) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlug(slug);
 
   if (!product) {
     notFound();
   }
 
-  const allProducts = getProducts();
+  const allProducts = await getProducts();
   const brand = getBrandDetails();
   const productUrl = `https://agrawalcycles.com/product/${product.slug}`;
 

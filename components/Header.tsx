@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, Bike } from "lucide-react";
-import { getBrandDetails } from "@/lib/data";
+import { getBrandDetails } from "@/lib/brand";
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);

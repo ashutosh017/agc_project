@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { MapPin, Phone, MessageSquare } from "lucide-react";
-import { getBrandDetails } from "@/lib/data";
+import { getBrandDetails } from "@/lib/brand";
 import { getNormalizedPhoneNumber } from "@/lib/utils";
 
 export default function Footer() {
@@ -196,9 +196,9 @@ export default function Footer() {
         </div>
 
         {/* Bottom copyright */}
-        <div className="border-t border-zinc-200/50 dark:border-zinc-900/50 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-zinc-400 dark:text-zinc-500">
+        <div className="border-t border-zinc-200/50 dark:border-zinc-900/50 pt-8 pb-24 md:pb-0 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-zinc-400 dark:text-zinc-500">
           <p>© {new Date().getFullYear()} {brand.name}. All rights reserved.</p>
-          <div className="flex space-x-6">
+          <div className="flex space-x-6 md:pr-24">
             <Link href="/privacy" className="hover:text-zinc-600 dark:hover:text-white transition-colors duration-200">
               Privacy Policy
             </Link>

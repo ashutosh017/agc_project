@@ -17,13 +17,17 @@ import {
   ChevronLeft,
   X
 } from "lucide-react";
-import { getBrandDetails, getProducts } from "@/lib/data";
+import { getBrandDetails } from "@/lib/brand";
 import { formatPrice, getNormalizedPhoneNumber, generateWhatsAppLink } from "@/lib/utils";
 import ProductCard from "@/components/ProductCard";
+import { Product } from "@/types";
 
-export default function HomeClient() {
+interface HomeClientProps {
+  allProducts: Product[];
+}
+
+export default function HomeClient({ allProducts }: HomeClientProps) {
   const brand = getBrandDetails();
-  const allProducts = getProducts();
   const featuredProducts = allProducts.filter((p) => p.featured);
   const phone = getNormalizedPhoneNumber();
 

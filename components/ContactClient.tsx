@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { MapPin, Phone, MessageSquare, Send, Bike, ChevronLeft, ChevronRight, X } from "lucide-react";
-import { getBrandDetails } from "@/lib/data";
+import { getBrandDetails } from "@/lib/brand";
 import { generateWhatsAppLink } from "@/lib/utils";
 
 export default function ContactClient() {

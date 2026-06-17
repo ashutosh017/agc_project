@@ -1,10 +1,28 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
+import { prisma } from "@/lib/db";
 import { Product } from "@/types";
 
 /**
- * Handle POST request to update the product listings inside data/products.json
+ * Handle GET request to fetch product listings from PostgreSQL
+ */
+export async function GET() {
+  try {
+    const products = await prisma.product.findMany({
+      orderBy: {
+        order: "asc"
+      }
+    });
+    return NextResponse.json(products);
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: error.message || "Failed to fetch products from database." },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * Handle POST request to update the product listings inside PostgreSQL
  */
 export async function POST(request: Request) {
   try {
@@ -17,15 +35,33 @@ export async function POST(request: Request) {
       );
     }
 
-    const filePath = path.join(process.cwd(), "data", "products.json");
-    
-    // Format JSON with 2 space indentation for readability
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
+    // Sync in a database transaction to ensure atomicity
+    await prisma.$transaction([
+      prisma.product.deleteMany(),
+      prisma.product.createMany({
+        data: data.map((product: Product, idx: number) => ({
+          id: product.id.toString(),
+          slug: product.slug,
+          name: product.name,
+          brand: product.brand,
+          price: Number(product.price),
+          category: product.category,
+          featured: Boolean(product.featured),
+          images: product.images,
+          shortDescription: product.shortDescription,
+          description: product.description,
+          specs: product.specs as any,
+          features: product.features,
+          variants: (product.variants || undefined) as any,
+          order: idx,
+        }))
+      })
+    ]);
 
-    return NextResponse.json({ success: true, message: "Catalog listings updated successfully." });
+    return NextResponse.json({ success: true, message: "Catalog listings updated successfully in database." });
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to update listings database." },
+      { success: false, error: error.message || "Failed to update database listings." },
       { status: 500 }
     );
   }

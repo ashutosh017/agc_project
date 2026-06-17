@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import StoreClient from "@/components/StoreClient";
-import { getBrandDetails } from "@/lib/data";
+import { getProducts } from "@/lib/data";
+import { getBrandDetails } from "@/lib/brand";
 
 export function generateMetadata(): Metadata {
   const brand = getBrandDetails();
@@ -10,8 +11,9 @@ export function generateMetadata(): Metadata {
   };
 }
 
-export default function StorePage() {
+export default async function StorePage() {
   const brand = getBrandDetails();
+  const products = await getProducts();
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -38,7 +40,7 @@ export default function StorePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <StoreClient />
+      <StoreClient products={products} />
     </>
   );
 }

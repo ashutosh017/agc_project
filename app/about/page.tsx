@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { ShieldCheck, Wrench, BadgeAlert, Clock, Bike, ChevronRight } from "lucide-react";
-import { getBrandDetails } from "@/lib/data";
+import { getBrandDetails } from "@/lib/brand";
 
 export const metadata: Metadata = {
   title: "About Us",

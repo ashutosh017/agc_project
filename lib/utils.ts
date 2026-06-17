@@ -1,4 +1,4 @@
-import { getBrandDetails } from "./data";
+import { getBrandDetails } from "./brand";
 
 /**
  * Formats a number as INR Currency (e.g. ₹1,45,000)

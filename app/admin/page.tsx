@@ -67,6 +67,17 @@ export default function AdminPage() {
   // Drag and drop state for images
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
+  // Change passcode configurations states
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [currentPasscode, setCurrentPasscode] = useState("");
+  const [newPasscode, setNewPasscode] = useState("");
+  const [confirmNewPasscode, setConfirmNewPasscode] = useState("");
+  const [changePasswordError, setChangePasswordError] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [showCurrentPasscode, setShowCurrentPasscode] = useState(false);
+  const [showNewPasscode, setShowNewPasscode] = useState(false);
+
   const handleImageDrop = (targetIndex: number) => {
     if (draggedIndex === null || draggedIndex === targetIndex || !editingProduct) return;
     
@@ -129,15 +140,28 @@ export default function AdminPage() {
     };
   }, [isEditing]);
 
-  // Handle Passcode check
-  const handleLogin = (e: React.FormEvent) => {
+  // Handle Passcode check using database authenticator API
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (passcode === "admin123") {
-      setIsAuthenticated(true);
+    try {
+      setIsLoggingIn(true);
       setAuthError("");
-      localStorage.setItem("admin_authenticated", "true");
-    } else {
-      setAuthError("Invalid passcode. Hint: check developer notes");
+      const res = await fetch("/api/admin/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ passcode })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setIsAuthenticated(true);
+        localStorage.setItem("admin_authenticated", "true");
+      } else {
+        setAuthError(data.error || "Invalid passcode.");
+      }
+    } catch (err) {
+      setAuthError("Failed to connect to authentication server.");
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -145,6 +169,45 @@ export default function AdminPage() {
     setIsAuthenticated(false);
     setPasscode("");
     localStorage.removeItem("admin_authenticated");
+  };
+
+  // Change Admin Passcode API PUT handler
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setChangePasswordError("");
+
+    if (newPasscode !== confirmNewPasscode) {
+      setChangePasswordError("New passcodes do not match.");
+      return;
+    }
+
+    if (newPasscode.trim().length < 4) {
+      setChangePasswordError("New passcode must be at least 4 characters long.");
+      return;
+    }
+
+    try {
+      setIsChangingPassword(true);
+      const res = await fetch("/api/admin/auth", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPasscode, newPasscode })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast("Admin passcode updated successfully!", "success");
+        setIsChangePasswordOpen(false);
+        setCurrentPasscode("");
+        setNewPasscode("");
+        setConfirmNewPasscode("");
+      } else {
+        setChangePasswordError(data.error || "Failed to update passcode.");
+      }
+    } catch (err) {
+      setChangePasswordError("Connection error. Could not update passcode.");
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   // Toast helper
@@ -465,9 +528,13 @@ export default function AdminPage() {
 
             <button
               type="submit"
-              className="w-full py-4.5 bg-zinc-950 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-zinc-800 transition-colors shadow-sm"
+              disabled={isLoggingIn}
+              className="w-full py-4.5 bg-zinc-950 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-zinc-800 transition-colors shadow-sm flex items-center justify-center gap-2 disabled:opacity-70"
             >
-              Authenticate
+              {isLoggingIn && (
+                <span className="w-3.5 h-3.5 border-2 border-t-white border-zinc-500 rounded-full animate-spin" />
+              )}
+              {isLoggingIn ? "Authenticating..." : "Authenticate"}
             </button>
 
             <Link
@@ -524,15 +591,26 @@ export default function AdminPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={startCreate}
-              className="flex items-center gap-1.5 py-3 px-5 rounded-full bg-zinc-950 text-white text-xs font-bold uppercase tracking-wider hover:bg-zinc-800 transition-colors shadow-sm"
+              className="flex items-center gap-1.5 py-3 px-5 rounded-full bg-zinc-950 text-white text-xs font-bold uppercase tracking-wider hover:bg-zinc-800 transition-colors shadow-sm cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               Add New Bike
             </button>
+
+            <button
+              onClick={() => {
+                setChangePasswordError("");
+                setIsChangePasswordOpen(true);
+              }}
+              className="flex items-center gap-1.5 py-3 px-5 rounded-full border border-zinc-200 bg-white text-zinc-650 hover:bg-zinc-100 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
+            >
+              <Lock className="w-4 h-4" />
+              Change Passcode
+            </button>
             
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1.5 py-3 px-5 rounded-full border border-zinc-200 bg-white text-zinc-650 hover:bg-zinc-100 text-xs font-bold uppercase tracking-wider transition-colors"
+              className="flex items-center gap-1.5 py-3 px-5 rounded-full border border-zinc-200 bg-white text-zinc-650 hover:bg-zinc-100 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               Sign Out
@@ -1062,7 +1140,7 @@ export default function AdminPage() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-xs transition-opacity duration-300">
           <div className="w-full max-w-md bg-white border border-zinc-200 rounded-3xl p-8 shadow-2xl mx-4 transform scale-100 transition-all duration-300">
             <div className="flex flex-col items-center text-center">
-              <div className="w-14 h-14 rounded-full bg-red-50 text-red-600 flex items-center justify-center mb-5 border border-red-100">
+              <div className="w-14 h-14 rounded-full bg-red-50 text-red-650 flex items-center justify-center mb-5 border border-red-100">
                 <Trash2 className="w-6 h-6 animate-pulse" />
               </div>
               <h3 className="text-xl font-bold uppercase tracking-tight text-zinc-950">
@@ -1092,6 +1170,130 @@ export default function AdminPage() {
                 Yes, Delete
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Change Passcode Modal Overlay */}
+      {isChangePasswordOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-xs transition-opacity duration-300">
+          <div className="w-full max-w-md bg-white border border-zinc-200 rounded-3xl p-8 shadow-2xl mx-4 transform scale-100 transition-all duration-300">
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className="w-12 h-12 rounded-full bg-zinc-100 text-zinc-900 flex items-center justify-center mb-4 border border-zinc-200">
+                <Lock className="w-5 h-5" />
+              </div>
+              <h3 className="text-xl font-bold uppercase tracking-tight text-zinc-950">
+                Update Passcode
+              </h3>
+              <p className="text-zinc-500 text-xs mt-1 tracking-wider uppercase">
+                Change Admin Login Password
+              </p>
+            </div>
+
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1.5">
+                  Current Passcode
+                </label>
+                <div className="relative">
+                  <input
+                    type={showCurrentPasscode ? "text" : "password"}
+                    required
+                    value={currentPasscode}
+                    onChange={(e) => setCurrentPasscode(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-zinc-950"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPasscode(!showCurrentPasscode)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 transition-colors focus:outline-none"
+                    aria-label={showCurrentPasscode ? "Hide passcode" : "Show passcode"}
+                  >
+                    {showCurrentPasscode ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1.5">
+                  New Passcode
+                </label>
+                <div className="relative">
+                  <input
+                    type={showNewPasscode ? "text" : "password"}
+                    required
+                    value={newPasscode}
+                    onChange={(e) => setNewPasscode(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-zinc-950"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPasscode(!showNewPasscode)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 transition-colors focus:outline-none"
+                    aria-label={showNewPasscode ? "Hide passcode" : "Show passcode"}
+                  >
+                    {showNewPasscode ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1.5">
+                  Confirm New Passcode
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={confirmNewPasscode}
+                  onChange={(e) => setConfirmNewPasscode(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-zinc-950"
+                />
+              </div>
+
+              {changePasswordError && (
+                <p className="text-red-550 text-xs font-semibold mt-2 flex items-center gap-1.5 justify-center bg-red-50 p-2.5 rounded-lg border border-red-100">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {changePasswordError}
+                </p>
+              )}
+
+              <div className="mt-8 flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsChangePasswordOpen(false);
+                    setCurrentPasscode("");
+                    setNewPasscode("");
+                    setConfirmNewPasscode("");
+                  }}
+                  className="flex-1 py-3 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-650 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                
+                <button
+                  type="submit"
+                  disabled={isChangingPassword}
+                  className="flex-1 py-3 rounded-xl bg-zinc-950 text-white hover:bg-zinc-800 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-70"
+                >
+                  {isChangingPassword && (
+                    <span className="w-3.5 h-3.5 border-2 border-t-white border-zinc-500 rounded-full animate-spin" />
+                  )}
+                  {isChangingPassword ? "Saving..." : "Save Passcode"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

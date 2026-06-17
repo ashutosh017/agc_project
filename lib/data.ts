@@ -1,5 +1,5 @@
 import { Product } from "@/types";
-import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/prisma";
 
 export async function getProducts(): Promise<Product[]> {
   try {

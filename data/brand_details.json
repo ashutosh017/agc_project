@@ -1,0 +1,37 @@
+{
+  "name": "Agrawal Cycles",
+  "about":"Since 1970s. Deals in all kinds of Bicycles | Electric Bicycles | Battery Cars, Bikes, Jeeps, etc.",
+  "address1": "saraswati kund, Near, link road, near Masani, Chauraha, Masani, Mathura, Uttar Pradesh 281001",
+  "address2": "Infront of Sanjay Medical Market, 335, Arya Samaj Road, Tilak Dwar, Mathura, Uttar Pradesh 281001",
+  "google_maps_address1": "https://www.google.com/maps/place/Agrawal+Cycles+%7C+Best+Cycle+Shop+in+Mathura/@27.5154512,77.6689246,17z/data=!3m1!4b1!4m6!3m5!1s0x39737118c495ed3f:0xdd2e46241b44c3a3!8m2!3d27.5154512!4d77.6689246!16s%2Fg%2F11vpzj6yn9?entry=ttu&g_ep=EgoyMDI2MDYxMC4wIKXMDSoASAFQAw%3D%3D",
+  "google_maps_address2": "https://www.google.com/maps/place/Agrawal+Cycle+Store+-+Best+cycle+store+in+Mathura/@27.4987438,77.6866328,17z/data=!4m6!3m5!1s0x39737110c638af59:0x1f08feaeb695b388!8m2!3d27.4986352!4d77.6865862!16s%2Fg%2F11ckrfn4_x?entry=ttu&g_ep=EgoyMDI2MDYxMy4wIKXMDSoASAFQAw%3D%3D",
+  "store": "7302694766",
+  "online orders": "9548294766",
+  "socials": {
+    "instagram": "https://www.instagram.com/agrawal_cycles_mathura/?hl=en",
+    "facebook": "https://www.facebook.com/p/Agrawal-Cycles-61558620495002/"
+  },
+  "shop_images": {
+    "landscapes": {
+      "1": "https://lh3.googleusercontent.com/gps-cs-s/APNQkAGtw7M-alLg6Wc55BxyO5ox95dZqa6DwAd1djgiJq2r10yh18Fuyuem0USonq8eKiJh_tH9p5kHmFzqAjLzrWqATeRgblTWGlIWD4sKIINUwoqt5nMbvchViB5KEvIgEqFTn6pMoQ=s1360-w1360-h1020-rw",
+      "2": "https://lh3.googleusercontent.com/gps-cs-s/APNQkAGwoVjzhUnn3cjxBbhQ57hC5zmR9I2UcxVSWeGMRDtBsiONhD9eM6lWRk5klZfnVyfDnxm1HdEk7z_tFhrAvIwQf73Wgk5Axiw18u7uZ5zUMYGYUUV1WvOZre7WWxKpbKZ0xGI=s1360-w1360-h1020-rw",
+      "3": "https://lh3.googleusercontent.com/gps-cs-s/APNQkAErXJN5dXkRWLbMMI9-E1okHam4kQFD3T0HQjwXmqpHv9zAsUhWIfGfkt3yT7ENjTr7u72qIXrPzofED2YYccTu_MsfozhsNZDFQK4g4vTCW7W1CeUU0PQYhC2XQNX6MzrQZhUFOQ=s1360-w1360-h1020-rw",
+      "4": "https://lh3.googleusercontent.com/gps-cs-s/APNQkAEaS0V3USwJahKoMWw4lc5xGdFJOoThYY4dCvWsTMWJ8LexVKdf8eJ3PzM90jUo_KxUrplmJ3EUSnLxHI3fLvHKHMTewrc7ZAa317f2fSqaJ_PpLWDSNngABLu3M2A4r7_wV50MBQ=s1360-w1360-h1020-rw",
+      "5": "https://lh3.googleusercontent.com/gps-cs-s/APNQkAGZJ0QjFaf5Pwf0_noT-e0jx4-y161mwUDRlNFUEdcVGZewUNVpTYbFW5frUIuLPrqCFDpZ7VNZ50VEACCStZZKmxc4JfnZ1lD8JQttinJCDIP_PDcg4dNhnP_-55m0-fQH_SWC=s1360-w1360-h1020-rw",
+       "6": "https://lh3.googleusercontent.com/gps-cs-s/APNQkAFcHmuMaywW0lYz2JrF5jcgUp2f99XMHdpbGn0O7gR0nijdjRoz3eWF3CaX6AUBcAeEVsV62G3X7RTF9gQwtd24BJ5R_LJplkGaPUpRUGCY0rBM0Be2toeM7hn7z3W_lIHQHoEL=s1360-w1360-h1020-rw",
+       "7":"https://lh3.googleusercontent.com/gps-cs-s/APNQkAF9Ebg1rKn4o6chrB9xb7UIYvlRxNu4XmmqrHtHMippEfWh1zZVtUajelbILqXNtfnPEuKUb2jM9Rv339-RjRwE8Iy2o39RRjbk74bLRtjwLt0P_-v5CVaZV16Sh_zfiA3pvIaF=s1360-w1360-h1020-rw"
+    },
+    "portraits": {
+      "1": "https://lh3.googleusercontent.com/gps-cs-s/APNQkAFhHFZ2jWahK0pI0g7RoIs0ygkoWu5sPuf75pB-oL4NdsXQZrZJV0XgXJcv3qDysxdwfwYcZVbIXJYbWXpOEB-m0dNwo99yqiJvI53uKNWD1VqYMhEyw-CqHmaeHiwcE4Fm8DoTUElEAOrR=s1360-w1360-h1020-rw",
+      "2": "https://lh3.googleusercontent.com/gps-cs-s/APNQkAHbvrrDdpiHBPSiy6AP6knGBiU4uDpwwO-s2nUrjmMhmOwkEc0zX_6Cn8H1OwaCu_iboJROCkSqvovj1E7-RsJpLmlFHyy-RsyOF5nydzKN52VP13D4pYQhCgZ2zZv0u40F5q6nhjd5yiZe=s1360-w1360-h1020-rw",
+      "3": "https://lh3.googleusercontent.com/gps-cs-s/APNQkAFmINPOueU8A1rRjWcyHX5tJxUrtAGsXwiwI_4vDPxvI5NmwTQ9JAkSqIcRiknyvciGLzhKmG6amPnExoDiRFqul5IZHKrdmgBAg4Dez28MP3nZG-V6qPfF1Fwwcebjh-oPit7W=s1360-w1360-h1020-rw",
+      "4": "https://lh3.googleusercontent.com/gps-cs-s/APNQkAFtPNe4k5ggeR_ChWWgabhjzPt_J5MeIayHnSDvoO9udds0T73GBeL5ZCz4kNgek9P3cPjgz8Q6pREY0YOneUXqpkuC_vc2qgmOnDs_mqi6MaC1LmOqnSQ_IfHyISDcn3Fe_U2-R5WYHyen=s1360-w1360-h1020-rw",
+      "5": "https://lh3.googleusercontent.com/gps-cs-s/APNQkAFSbLuExhTeEGnNUVzc7xSbHj_8ei3_gbyImK5Z2MDYg531R2Eh2V29TPSPgKmQo7xQZoHryyQn3ee_vZCaDQMnoFmEoBORZEqBkeUTEREJDscrXtnK9dJ7T9XaQgNmYiQ59Gzk_wS3HYtD=s1360-w1360-h1020-rw",
+      "6": "https://lh3.googleusercontent.com/gps-cs-s/APNQkAFIeGpo7QG1PhldGSdOCSlZ5E17K06j2UjHGa-_g0id3ZWbBzQAStZ4jguCHfZI2-E44-Mo1vbo45_SJyQgMXuURSzHlxz7K4JnKXFGIUCHjYcoIgnv-MIiqdID1VL6jTmSvrcrNxIsCvVm=s1360-w1360-h1020-rw",
+      "7": "https://lh3.googleusercontent.com/gps-cs-s/APNQkAFVneuVgdVTxyd4wjvUNxLGMIEptIssbe4k_cbur4SyWsfBkfZDZuueqEMjYhmtovY-l8ytr9I3zqQv38VSiOsCwEB5bIl5r5TyK2qhc-A1EOW0LQTFz20u8c-CX1kLutyK_jTQismEIog=s1360-w1360-h1020-rw",
+      "8": "https://lh3.googleusercontent.com/gps-cs-s/APNQkAFa9OMmPbFZoJD6o_gm3G1DwQ9zEvY-UAPPuvHN3zZVG_sdldt6ZwOGRYGfBtihZkYIpRxbLFcpdUJcNtLxZMbouFLov_T5sSLDv2u9KGhcdV2g80yzGP5g8gGmnnBl1e7uI97pmM5UfbM=s1360-w1360-h1020-rw",
+      "9": "https://lh3.googleusercontent.com/gps-cs-s/APNQkAEcj1Zy7pQjezr-Rc2paVhZH6rogrqYZC6KtjZL19QA7hx_Rbv69eU30fkg3UuHctObupm_cvmT5k-DRaH2eoKp8iVnKxX2GfmkFfohbEnYUbmAZYivwjYlKF9UK1k9vPZUJuPQ2-s9qG0=s1360-w1360-h1020-rw"
+ 
+    }
+  }
+}
